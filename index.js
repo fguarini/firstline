@@ -9,7 +9,13 @@ module.exports = (path, usrOpts) => {
   };
   Object.assign(opts, usrOpts);
   return new Promise((resolve, reject) => {
-    const rs = fs.createReadStream(path, {encoding: opts.encoding});
+    let rs;
+    if (typeof path === 'string') {
+      rs = fs.createReadStream(path, {encoding: opts.encoding});
+    } else {
+      console.log('it is not a filePath');
+      rs = path
+    }
     let acc = '';
     let pos = 0;
     let index;
@@ -21,10 +27,15 @@ module.exports = (path, usrOpts) => {
           pos += chunk.length;
         } else {
           pos += index;
-          rs.close();
+          if (typeof path === 'string') {
+            rs.close();
+          } else {
+            rs.destroy();
+          }
         }
       })
       .on('close', () => resolve(acc.slice(acc.charCodeAt(0) === 0xFEFF ? 1 : 0, pos)))
       .on('error', err => reject(err));
   });
 };
+
